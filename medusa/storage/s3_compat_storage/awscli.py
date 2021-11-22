@@ -24,6 +24,7 @@ from retrying import retry
 
 from libcloud.storage.providers import get_driver, Provider
 from medusa import utils
+from medusa.storage.storage_provider import StorageProvider
 
 MAX_UP_DOWN_LOAD_RETRIES = 5
 
@@ -117,6 +118,19 @@ class AwsCli(object):
 
         if self.endpoint_url is not None:
             cmd.extend(["--endpoint-url", self.endpoint_url])
+
+        if self._config.region is not None and self._config.region != "default":
+            cmd.extend(["--region", self._config.region])
+        elif not (self._config.storage_provider in [Provider.S3, "s3_compatible"]) and self._config.region == "default":
+            # Legacy libcloud S3 providers that were tied to a specific region such as s3_us_west_oregon
+            cmd.extend(["--region", get_driver(self._config.storage_provider).region_name])
+
+        if utils.evaluate_boolean(self._config.secure) and \
+                self._config.storage_provider == StorageProvider.S3_COMPATIBLE:
+            if self._config.cert_file:
+                cmd.extend(["--ca-bundle", self._config.cert_file])
+            else:
+                cmd.extend(["--no-verify-ssl"])
 
         return cmd
 
