@@ -69,7 +69,6 @@ class S3BaseStorage(AbstractStorage):
     def connect_storage(self):
         credentials = self.session.get_credentials()
 
-
         # MinIOStorageDriver is the only clean implementation of BaseS3StorageDriver in libcloud
         secure = False
         if self.config.secure:
